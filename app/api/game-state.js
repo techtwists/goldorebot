@@ -47,7 +47,7 @@ export default async function handler(req, res) {
           userLevel: 1,
           xpToNextLevel: 100,
         };
-        await db.collection('game-users').insertOne(defaultGameState);
+        await db.collection('data').insertOne(defaultGameState);
         res.status(200).json(defaultGameState);
       }
     } catch (error) {
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     const { userId, gameState } = req.body;
 
     try {
-      const updatedGameState = await db.collection('game-users').findOneAndUpdate(
+      const updatedGameState = await db.collection('data').findOneAndUpdate(
         { userId: Number(userId) },
         { $set: gameState },
         { returnDocument: 'after', upsert: true }
