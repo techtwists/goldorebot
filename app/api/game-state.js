@@ -25,6 +25,9 @@ if (process.env.NODE_ENV === 'development') {
   clientPromise = client.connect();
 }
 
+// Export the clientPromise for use in other files like page.js/ts
+export { clientPromise };
+
 export default async (req, res) => {
   try {
     const client = await clientPromise;
