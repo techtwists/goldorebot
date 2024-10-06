@@ -31,7 +31,7 @@ export default async (req, res) => {
 
   if (req.method === 'GET') {
     const userId = parseInt(req.query.userId, 10);
-    const gameState = await db.collection('game_states').findOne({ userId });
+    const gameState = await db.collection('game-users').findOne({ userId });
 
     if (gameState) {
       res.status(200).json(gameState);
