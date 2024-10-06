@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import WebApp from '@twa-dev/sdk';
-import axios from 'axios';
-import './Game.css';
+import axios from 'axios'; // Axios for making HTTP requests
+import './Game.css'; // Create a separate CSS file for styles
 
+// Define the interface for user data
 interface UserData {
   id: number;
   first_name: string;
@@ -39,7 +40,7 @@ export default function Game() {
     userLevel: 1,
     xpToNextLevel: 100,
   });
-  const [errorLogs, setErrorLogs] = useState<string[]>([]);
+  const [errorLogs, setErrorLogs] = useState<string[]>([]); // State to hold error logs
 
   // Fetch user data from WebApp
   useEffect(() => {
@@ -54,15 +55,13 @@ export default function Game() {
     try {
       const response = await axios.get(`/api/game-state?userId=${userId}`);
       if (response.data) {
-        setGameState(response.data);
+        setGameState(response.data); // Update local game state with fetched data
       }
     } catch (error: unknown) {
-      console.error('Error fetching game state:', error);
-      if (axios.isAxiosError(error)) {
-        setErrorLogs((prevLogs) => [...prevLogs, `Error fetching game state: ${error.message}`]);
-      } else {
-        setErrorLogs((prevLogs) => [...prevLogs, 'An unknown error occurred while fetching game state.']);
-      }
+      // Handle unknown error type
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      console.error('Error fetching game state:', errorMessage);
+      setErrorLogs((prevLogs) => [...prevLogs, 'Error fetching game state: ' + errorMessage]); // Log error
     }
   };
 
@@ -74,12 +73,10 @@ export default function Game() {
         gameState,
       });
     } catch (error: unknown) {
-      console.error('Error saving game state:', error);
-      if (axios.isAxiosError(error)) {
-        setErrorLogs((prevLogs) => [...prevLogs, `Error saving game state: ${error.message}`]);
-      } else {
-        setErrorLogs((prevLogs) => [...prevLogs, 'An unknown error occurred while saving game state.']);
-      }
+      // Handle unknown error type
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      console.error('Error saving game state:', errorMessage);
+      setErrorLogs((prevLogs) => [...prevLogs, 'Error saving game state: ' + errorMessage]); // Log error
     }
   };
 
@@ -222,21 +219,18 @@ export default function Game() {
             </button>
           </div>
           <div id="auto-miner">Miners: {gameState.minerCount}</div>
+          <div id="error-logs">
+            <h3>Error Logs:</h3>
+            <ul>
+              {errorLogs.map((log, index) => (
+                <li key={index}>{log}</li>
+              ))}
+            </ul>
+          </div>
         </>
       ) : (
         <div>Loading...</div>
       )}
-      {/* Display error logs */}
-      {errorLogs.length > 0 && (
-        <div id="error-logs">
-          <h3>Error Logs:</h3>
-          <ul>
-            {errorLogs.map((log, index) => (
-              <li key={index}>{log}</li>
-            ))}
-          </ul>
-        </div>
-      )}
     </main>
   );
-}
+          }
