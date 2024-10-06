@@ -26,28 +26,45 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 export default async (req, res) => {
-  const client = await clientPromise;
-  const db = client.db('goldore'); // Replace with your database name
+  try {
+    const client = await clientPromise;
+    const db = client.db('goldore'); // Replace with your database name
 
-  if (req.method === 'GET') {
-    const userId = parseInt(req.query.userId, 10);
-    const gameState = await db.collection('game-users').findOne({ userId });
+    if (req.method === 'GET') {
+      const userId = parseInt(req.query.userId, 10);
+      
+      // Validate userId
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
 
-    if (gameState) {
-      res.status(200).json(gameState);
+      const gameState = await db.collection('game-users').findOne({ userId });
+
+      if (gameState) {
+        return res.status(200).json(gameState);
+      } else {
+        return res.status(404).json({ message: 'Game state not found' });
+      }
+    } else if (req.method === 'POST') {
+      const { userId, gameState } = req.body;
+
+      // Validate input
+      if (!userId || !gameState) {
+        return res.status(400).json({ message: 'Missing userId or gameState' });
+      }
+
+      await db.collection('game-users').updateOne(
+        { userId },
+        { $set: { ...gameState } },
+        { upsert: true } // Insert a new document if no match is found
+      );
+      return res.status(201).json({ message: 'Game state saved successfully' });
     } else {
-      res.status(404).json({ message: 'Game state not found' });
+      res.setHeader('Allow', ['GET', 'POST']);
+      return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
-  } else if (req.method === 'POST') {
-    const { userId, gameState } = req.body;
-    await db.collection('game_states').updateOne(
-      { userId },
-      { $set: { ...gameState } },
-      { upsert: true } // Insert a new document if no match is found
-    );
-    res.status(201).json({ message: 'Game state saved successfully' });
-  } else {
-    res.setHeader('Allow', ['GET', 'POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+  } catch (error) {
+    console.error('Database error:', error); // Log the error for debugging
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
