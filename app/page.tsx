@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import WebApp from '@twa-dev/sdk';
+import axios from 'axios'; // Axios for making HTTP requests
 import './Game.css'; // Create a separate CSS file for styles
 
 // Define the interface for user data
@@ -42,17 +43,46 @@ export default function Game() {
 
   // Fetch user data from WebApp
   useEffect(() => {
-    // Expand the game to full screen
-    WebApp.expand()
-    
+    WebApp.expand();
     if (WebApp.initDataUnsafe.user) {
       setUserData(WebApp.initDataUnsafe.user as UserData);
     }
   }, []);
 
+  // Fetch game state from MongoDB (via API route)
+  const fetchGameState = async (userId: number) => {
+    try {
+      const response = await axios.get(`/api/game-state?userId=${userId}`);
+      if (response.data) {
+        setGameState(response.data); // Update local game state with fetched data
+      }
+    } catch (error) {
+      console.error('Error fetching game state:', error);
+    }
+  };
+
+  // Save game state to MongoDB (via API route)
+  const saveGameState = async () => {
+    try {
+      await axios.post('/api/game-state', {
+        userId: userData?.id,
+        gameState,
+      });
+    } catch (error) {
+      console.error('Error saving game state:', error);
+    }
+  };
+
+  // Fetch game state when userData becomes available
+  useEffect(() => {
+    if (userData) {
+      fetchGameState(userData.id);
+    }
+  }, [userData]);
+
   // Handle score increment
   const incrementScore = (amount: number) => {
-    setGameState(prevState => ({
+    setGameState((prevState) => ({
       ...prevState,
       score: prevState.score + amount,
     }));
@@ -62,7 +92,7 @@ export default function Game() {
   // Handle Pickaxe upgrade
   const upgradePickaxe = () => {
     if (gameState.score >= gameState.pickaxeCost) {
-      setGameState(prevState => ({
+      setGameState((prevState) => ({
         ...prevState,
         score: prevState.score - prevState.pickaxeCost,
         pickaxeLevel: prevState.pickaxeLevel + 1,
@@ -76,7 +106,7 @@ export default function Game() {
   // Hire miner logic
   const hireMiner = () => {
     if (gameState.score >= gameState.minerCost) {
-      setGameState(prevState => ({
+      setGameState((prevState) => ({
         ...prevState,
         score: prevState.score - prevState.minerCost,
         minerCount: prevState.minerCount + 1,
@@ -88,7 +118,7 @@ export default function Game() {
 
   // Handle XP and leveling up
   const addXP = (amount: number) => {
-    setGameState(prevState => {
+    setGameState((prevState) => {
       let newXP = prevState.userXP + amount;
       let levelUp = false;
       if (newXP >= prevState.xpToNextLevel) {
@@ -116,6 +146,13 @@ export default function Game() {
     }, 1000);
     return () => clearInterval(interval);
   }, [gameState.minerCount]);
+
+  // Auto-save game state when it changes
+  useEffect(() => {
+    if (userData) {
+      saveGameState();
+    }
+  }, [gameState]);
 
   // UI updates and buttons
   const updateButtonStates = (score: number, cost: number) => score >= cost;
@@ -181,4 +218,4 @@ export default function Game() {
       )}
     </main>
   );
-}
+    }
