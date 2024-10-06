@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import WebApp from '@twa-dev/sdk'
 import UserInfo from './UserInfo'
+import GameInterface from './GameInterface'
 
 // Define the interface for user data
 interface UserData {
