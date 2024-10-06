@@ -1,73 +1,72 @@
-// pages/api/game-state.js
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.MONGODB_URI; // Ensure this is set in your Vercel environment variables
+const uri = process.env.MONGODB_URI;
+const options = {};
 
 let client;
 let clientPromise;
 
+if (!process.env.MONGODB_URI) {
+  throw new Error('Please add your Mongo URI to .env.local');
+}
+
 if (process.env.NODE_ENV === 'development') {
-  // Use a global variable so the MongoDB client isn't constantly created
+  // Use global variable for the MongoClient in development mode to prevent multiple connections
   if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    client = new MongoClient(uri, options);
     global._mongoClientPromise = client.connect();
   }
   clientPromise = global._mongoClientPromise;
 } else {
-  // In production mode, create a new MongoClient
-  client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  // Use a new client instance in production mode
+  client = new MongoClient(uri, options);
   clientPromise = client.connect();
 }
 
-// Export the clientPromise for use in other files like page.js/ts
-export { clientPromise };
+export default async function handler(req, res) {
+  const client = await clientPromise;
+  const db = client.db('user'); // Use your actual database name
 
-export default async (req, res) => {
-  try {
-    const client = await clientPromise;
-    const db = client.db('user'); // Replace with your database name
+  if (req.method === 'GET') {
+    const { userId } = req.query;
 
-    if (req.method === 'GET') {
-      const userId = parseInt(req.query.userId, 10);
-      
-      // Validate userId
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: 'Invalid user ID' });
-      }
-
-      const gameState = await db.collection('data').findOne({ userId });
-
+    try {
+      const gameState = await db.collection('data').findOne({ userId: Number(userId) });
       if (gameState) {
-        return res.status(200).json(gameState);
+        res.status(200).json(gameState);
       } else {
-        return res.status(404).json({ message: 'Game state not found' });
+        const defaultGameState = {
+          userId: Number(userId),
+          score: 0,
+          clickValue: 1,
+          pickaxeLevel: 1,
+          minerCount: 0,
+          pickaxeCost: 10,
+          minerCost: 50,
+          userXP: 0,
+          userLevel: 1,
+          xpToNextLevel: 100,
+        };
+        await db.collection('game-users').insertOne(defaultGameState);
+        res.status(200).json(defaultGameState);
       }
-    } else if (req.method === 'POST') {
-      const { userId, gameState } = req.body;
-
-      // Validate input
-      if (!userId || !gameState) {
-        return res.status(400).json({ message: 'Missing userId or gameState' });
-      }
-
-      await db.collection('game-users').updateOne(
-        { userId },
-        { $set: { ...gameState } },
-        { upsert: true } // Insert a new document if no match is found
-      );
-      return res.status(201).json({ message: 'Game state saved successfully' });
-    } else {
-      res.setHeader('Allow', ['GET', 'POST']);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch game state' });
     }
-  } catch (error) {
-    console.error('Database error:', error); // Log the error for debugging
-    return res.status(500).json({ message: 'Internal Server Error' });
+  } else if (req.method === 'POST') {
+    const { userId, gameState } = req.body;
+
+    try {
+      const updatedGameState = await db.collection('game-users').findOneAndUpdate(
+        { userId: Number(userId) },
+        { $set: gameState },
+        { returnDocument: 'after', upsert: true }
+      );
+      res.status(200).json(updatedGameState.value);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to save game state' });
+    }
+  } else {
+    res.status(405).json({ error: 'Method not allowed' });
   }
-};
+}
