@@ -1,7 +1,8 @@
 'use client'
 
+import React, { useState, useEffect } from 'react'
 import WebApp from '@twa-dev/sdk'
-import { useEffect, useState } from 'react'
+import UserInfo from './UserInfo'
 
 // Define the interface for user data
 interface UserData {
@@ -13,8 +14,32 @@ interface UserData {
   is_premium?: boolean;
 }
 
+// Define the interface for game state
+interface GameState {
+  score: number;
+  clickValue: number;
+  pickaxeLevel: number;
+  minerCount: number;
+  pickaxeCost: number;
+  minerCost: number;
+  userXP: number;
+  userLevel: number;
+  xpToNextLevel: number;
+}
+
 export default function Home() {
   const [userData, setUserData] = useState<UserData | null>(null)
+  const [gameState, setGameState] = useState<GameState>({
+    score: 0,
+    clickValue: 1,
+    pickaxeLevel: 1,
+    minerCount: 0,
+    pickaxeCost: 10,
+    minerCost: 50,
+    userXP: 0,
+    userLevel: 1,
+    xpToNextLevel: 100,
+  })
 
   useEffect(() => {
     if (WebApp.initDataUnsafe.user) {
@@ -22,19 +47,60 @@ export default function Home() {
     }
   }, [])
 
+  // Increment score
+  const incrementScore = (amount: number) => {
+    setGameState(prevState => ({
+      ...prevState,
+      score: prevState.score + amount,
+    }))
+  }
+
+  // Upgrade pickaxe
+  const upgradePickaxe = () => {
+    if (gameState.score >= gameState.pickaxeCost) {
+      setGameState(prevState => ({
+        ...prevState,
+        score: prevState.score - prevState.pickaxeCost,
+        pickaxeLevel: prevState.pickaxeLevel + 1,
+        clickValue: Math.pow(2, prevState.pickaxeLevel),
+        pickaxeCost: Math.floor(10 * Math.pow(1.5, prevState.pickaxeLevel)),
+      }))
+    }
+  }
+
+  // Hire miner
+  const hireMiner = () => {
+    if (gameState.score >= gameState.minerCost) {
+      setGameState(prevState => ({
+        ...prevState,
+        score: prevState.score - prevState.minerCost,
+        minerCount: prevState.minerCount + 1,
+        minerCost: Math.floor(50 * Math.pow(1.5, prevState.minerCount)),
+      }))
+    }
+  }
+
+  // Auto-mining logic
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (gameState.minerCount > 0) {
+        incrementScore(gameState.minerCount)
+      }
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [gameState.minerCount])
+
   return (
     <main className="p-4">
       {userData ? (
         <>
-          <h1 className="text-2xl font-bold mb-4">User Data</h1>
-          <ul>
-            <li>ID: {userData.id}</li>
-            <li>First Name: {userData.first_name}</li>
-            <li>Last Name: {userData.last_name || 'N/A'}</li>
-            <li>Username: {userData.username || 'N/A'}</li>
-            <li>Language Code: {userData.language_code}</li>
-            <li>Is Premium: {userData.is_premium ? 'Yes' : 'No'}</li>
-          </ul>
+          <UserInfo user={userData} gameState={gameState} />
+          <GameInterface
+            gameState={gameState}
+            incrementScore={incrementScore}
+            upgradePickaxe={upgradePickaxe}
+            hireMiner={hireMiner}
+          />
         </>
       ) : (
         <div>Loading...</div>
