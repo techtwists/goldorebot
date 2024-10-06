@@ -73,6 +73,13 @@ export default function Game() {
     }
   };
 
+  // Load game state from MongoDB (via API route)
+  const loadGameState = async () => {
+    if (userData) {
+      await fetchGameState(userData.id);
+    }
+  };
+
   // Fetch game state when userData becomes available
   useEffect(() => {
     if (userData) {
@@ -210,6 +217,20 @@ export default function Game() {
             >
               Hire Miner (Cost: {gameState.minerCost})
             </button>
+            <button
+              id="save-game"
+              className="upgrade-btn"
+              onClick={saveGameState}
+            >
+              Save Game
+            </button>
+            <button
+              id="load-game"
+              className="upgrade-btn"
+              onClick={loadGameState}
+            >
+              Load Game
+            </button>
           </div>
           <div id="auto-miner">Miners: {gameState.minerCount}</div>
         </>
@@ -218,4 +239,4 @@ export default function Game() {
       )}
     </main>
   );
-    }
+              }
