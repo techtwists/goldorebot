@@ -28,7 +28,7 @@ if (process.env.NODE_ENV === 'development') {
 export default async (req, res) => {
   try {
     const client = await clientPromise;
-    const db = client.db('goldore'); // Replace with your database name
+    const db = client.db('user'); // Replace with your database name
 
     if (req.method === 'GET') {
       const userId = parseInt(req.query.userId, 10);
@@ -38,7 +38,7 @@ export default async (req, res) => {
         return res.status(400).json({ message: 'Invalid user ID' });
       }
 
-      const gameState = await db.collection('game-users').findOne({ userId });
+      const gameState = await db.collection('data').findOne({ userId });
 
       if (gameState) {
         return res.status(200).json(gameState);
