@@ -42,6 +42,9 @@ export default function Game() {
 
   // Fetch user data from WebApp
   useEffect(() => {
+    // Expand the game to full screen
+    WebApp.expand()
+    
     if (WebApp.initDataUnsafe.user) {
       setUserData(WebApp.initDataUnsafe.user as UserData);
     }
