@@ -247,4 +247,9 @@ export default function Game() {
             </ul>
           </div>
         </>
-      ) :
+      ) : (
+        <div>Loading...</div>
+      )}
+    </main>
+  );
+}
