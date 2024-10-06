@@ -28,7 +28,7 @@ interface GameState {
   xpToNextLevel: number;
 }
 
-export default function page() {
+export default function Page() {
   const [userData, setUserData] = useState<UserData | null>(null)
   const [gameState, setGameState] = useState<GameState>({
     score: 0,
