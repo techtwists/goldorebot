@@ -57,7 +57,7 @@ export default function Game() {
       if (response.data) {
         setGameState(response.data); // Update local game state with fetched data
       }
-    } catch (error) {
+    } catch (error: any) {  // Cast error to any
       console.error('Error fetching game state:', error);
       setErrorLogs((prevLogs) => [...prevLogs, 'Error fetching game state: ' + error.message]); // Log error
     }
@@ -70,7 +70,7 @@ export default function Game() {
         userId: userData?.id,
         gameState,
       });
-    } catch (error) {
+    } catch (error: any) { // Cast error to any
       console.error('Error saving game state:', error);
       setErrorLogs((prevLogs) => [...prevLogs, 'Error saving game state: ' + error.message]); // Log error
     }
@@ -252,4 +252,4 @@ export default function Game() {
       )}
     </main>
   );
-}
+                                  }
