@@ -1,51 +1,53 @@
+// pages/api/game-state.js
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.MONGODB_URI;  // Safely access the URI from environment variables
+const uri = process.env.MONGODB_URI; // Ensure this is set in your Vercel environment variables
 
-let cachedClient = null;  // Cache the client for reuse
+let client;
+let clientPromise;
 
-async function connectToDatabase() {
-  if (cachedClient) {
-    return cachedClient;
+if (process.env.NODE_ENV === 'development') {
+  // Use a global variable so the MongoDB client isn't constantly created
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    global._mongoClientPromise = client.connect();
   }
-
-  // Create a new MongoClient instance and connect
-  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-  await client.connect();
-  cachedClient = client;  // Cache the client for future use
-  return client;
+  clientPromise = global._mongoClientPromise;
+} else {
+  // In production mode, create a new MongoClient
+  client = new MongoClient(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  clientPromise = client.connect();
 }
 
-export default async function handler(req, res) {
-  const { method } = req;
+export default async (req, res) => {
+  const client = await clientPromise;
+  const db = client.db('your-database-name'); // Replace with your database name
 
-  const client = await connectToDatabase();
-  const db = client.db('goldore');  // Use your specific database name
-  const collection = db.collection('game-users');  // Collection to store user game data
+  if (req.method === 'GET') {
+    const userId = parseInt(req.query.userId, 10);
+    const gameState = await db.collection('game_states').findOne({ userId });
 
-  switch (method) {
-    case 'GET': {
-      const { userId } = req.query;
-      const gameState = await collection.findOne({ userId: parseInt(userId) });
-      if (gameState) {
-        res.status(200).json(gameState);
-      } else {
-        res.status(404).json({ message: 'Game state not found' });
-      }
-      break;
+    if (gameState) {
+      res.status(200).json(gameState);
+    } else {
+      res.status(404).json({ message: 'Game state not found' });
     }
-    case 'POST': {
-      const { userId, gameState } = req.body;
-      const result = await collection.updateOne(
-        { userId: parseInt(userId) },
-        { $set: gameState },
-        { upsert: true }
-      );
-      res.status(200).json({ message: 'Game state saved', result });
-      break;
-    }
-    default:
-      res.setHeader('Allow', ['GET', 'POST']);
-      res.status(405).end(`Method ${method} Not Allowed`);
+  } else if (req.method === 'POST') {
+    const { userId, gameState } = req.body;
+    await db.collection('game_states').updateOne(
+      { userId },
+      { $set: { ...gameState } },
+      { upsert: true } // Insert a new document if no match is found
+    );
+    res.status(201).json({ message: 'Game state saved successfully' });
+  } else {
+    res.setHeader('Allow', ['GET', 'POST']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
   }
-}
+};
