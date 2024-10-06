@@ -1,5 +1,5 @@
 import React from 'react'
-import { GameState } from './Home'
+import { GameState } from './Page'
 
 interface UserInfoProps {
   user: {
