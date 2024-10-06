@@ -2,10 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import WebApp from '@twa-dev/sdk';
-import axios from 'axios'; // Axios for making HTTP requests
-import './Game.css'; // Create a separate CSS file for styles
+import axios from 'axios';
+import './Game.css';
 
-// Define the interface for user data
 interface UserData {
   id: number;
   first_name: string;
@@ -40,7 +39,7 @@ export default function Game() {
     userLevel: 1,
     xpToNextLevel: 100,
   });
-  const [errorLogs, setErrorLogs] = useState<string[]>([]); // State for error logs
+  const [errorLogs, setErrorLogs] = useState<string[]>([]);
 
   // Fetch user data from WebApp
   useEffect(() => {
@@ -55,11 +54,15 @@ export default function Game() {
     try {
       const response = await axios.get(`/api/game-state?userId=${userId}`);
       if (response.data) {
-        setGameState(response.data); // Update local game state with fetched data
+        setGameState(response.data);
       }
-    } catch (error: any) {  // Cast error to any
+    } catch (error: unknown) {
       console.error('Error fetching game state:', error);
-      setErrorLogs((prevLogs) => [...prevLogs, 'Error fetching game state: ' + error.message]); // Log error
+      if (axios.isAxiosError(error)) {
+        setErrorLogs((prevLogs) => [...prevLogs, `Error fetching game state: ${error.message}`]);
+      } else {
+        setErrorLogs((prevLogs) => [...prevLogs, 'An unknown error occurred while fetching game state.']);
+      }
     }
   };
 
@@ -70,16 +73,13 @@ export default function Game() {
         userId: userData?.id,
         gameState,
       });
-    } catch (error: any) { // Cast error to any
+    } catch (error: unknown) {
       console.error('Error saving game state:', error);
-      setErrorLogs((prevLogs) => [...prevLogs, 'Error saving game state: ' + error.message]); // Log error
-    }
-  };
-
-  // Load game state from MongoDB (via API route)
-  const loadGameState = async () => {
-    if (userData) {
-      await fetchGameState(userData.id);
+      if (axios.isAxiosError(error)) {
+        setErrorLogs((prevLogs) => [...prevLogs, `Error saving game state: ${error.message}`]);
+      } else {
+        setErrorLogs((prevLogs) => [...prevLogs, 'An unknown error occurred while saving game state.']);
+      }
     }
   };
 
@@ -220,36 +220,23 @@ export default function Game() {
             >
               Hire Miner (Cost: {gameState.minerCost})
             </button>
-            <button
-              id="save-game"
-              className="upgrade-btn"
-              onClick={saveGameState}
-            >
-              Save Game
-            </button>
-            <button
-              id="load-game"
-              className="upgrade-btn"
-              onClick={loadGameState}
-            >
-              Load Game
-            </button>
           </div>
           <div id="auto-miner">Miners: {gameState.minerCount}</div>
-
-          {/* Error Log Section */}
-          <div id="error-log">
-            <h3>Error Logs:</h3>
-            <ul>
-              {errorLogs.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </div>
         </>
       ) : (
         <div>Loading...</div>
       )}
+      {/* Display error logs */}
+      {errorLogs.length > 0 && (
+        <div id="error-logs">
+          <h3>Error Logs:</h3>
+          <ul>
+            {errorLogs.map((log, index) => (
+              <li key={index}>{log}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </main>
   );
-                                  }
+}
