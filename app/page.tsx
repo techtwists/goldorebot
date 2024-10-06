@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import WebApp from '@twa-dev/sdk';
-import axios from 'axios'; // Axios for making HTTP requests
-import './Game.css'; // Create a separate CSS file for styles
+import './Game.css'; // Import your CSS for styling
 
 // Define the interface for user data
 interface UserData {
@@ -40,7 +39,7 @@ export default function Game() {
     userLevel: 1,
     xpToNextLevel: 100,
   });
-  const [errorLogs, setErrorLogs] = useState<string[]>([]); // State to hold error logs
+  const [errorLogs, setErrorLogs] = useState<string[]>([]);
 
   // Fetch user data from WebApp
   useEffect(() => {
@@ -50,33 +49,44 @@ export default function Game() {
     }
   }, []);
 
-  // Fetch game state from MongoDB (via API route)
+  // Fetch game state from MongoDB using fetch
   const fetchGameState = async (userId: number) => {
     try {
-      const response = await axios.get(`/api/game-state?userId=${userId}`);
-      if (response.data) {
-        setGameState(response.data); // Update local game state with fetched data
+      const response = await fetch(`/api/game-state?userId=${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setGameState(data); // Update local game state with fetched data
+      } else {
+        throw new Error('Failed to fetch game state');
       }
     } catch (error: unknown) {
-      // Handle unknown error type
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       console.error('Error fetching game state:', errorMessage);
-      setErrorLogs((prevLogs) => [...prevLogs, 'Error fetching game state: ' + errorMessage]); // Log error
+      setErrorLogs((prevLogs) => [...prevLogs, 'Error fetching game state: ' + errorMessage]);
     }
   };
 
-  // Save game state to MongoDB (via API route)
+  // Save game state to MongoDB using fetch
   const saveGameState = async () => {
     try {
-      await axios.post('/api/game-state', {
-        userId: userData?.id,
-        gameState,
+      const response = await fetch('/api/game-state', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userData?.id,
+          gameState,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to save game state');
+      }
     } catch (error: unknown) {
-      // Handle unknown error type
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       console.error('Error saving game state:', errorMessage);
-      setErrorLogs((prevLogs) => [...prevLogs, 'Error saving game state: ' + errorMessage]); // Log error
+      setErrorLogs((prevLogs) => [...prevLogs, 'Error saving game state: ' + errorMessage]);
     }
   };
 
@@ -233,4 +243,4 @@ export default function Game() {
       )}
     </main>
   );
-          }
+              }
