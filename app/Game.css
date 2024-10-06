@@ -1,0 +1,156 @@
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #2c3e50;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+#game-container {
+  background-color: #34495e;
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+#ore {
+  width: 150px;
+  height: 150px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+#ore:active {
+  transform: scale(0.95);
+}
+
+#score {
+  font-size: 24px;
+  color: #f1c40f;
+  margin-top: 20px;
+}
+
+#user-info {
+  background-color: #34495e;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+#user-icon {
+  width: 50px;
+  height: 50px;
+  background-color: #3498db;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  color: white;
+  font-weight: bold;
+}
+
+#user-details {
+  text-align: left;
+}
+
+#user-name {
+  font-size: 20px;
+  color: #ecf0f1;
+  margin: 0;
+}
+
+#user-level {
+  font-size: 16px;
+  color: #bdc3c7;
+  margin: 0;
+}
+
+#xp-bar {
+  width: 150px;
+  height: 10px;
+  background-color: #2c3e50;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+#xp-progress {
+  height: 100%;
+  background-color: #27ae60;
+  transition: width 0.3s ease-out;
+}
+
+#ui-container {
+  background-color: #2c3e50;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.upgrade-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.upgrade-btn:hover {
+  background-color: #2980b9;
+}
+
+.upgrade-btn:disabled {
+  background-color: #7f8c8d;
+  cursor: not-allowed;
+}
+
+#auto-miner {
+  font-size: 18px;
+  color: #ecf0f1;
+  margin-top: 10px;
+}
+
+#coin-container {
+  position: absolute;
+  pointer-events: none;
+}
+
+.coin {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background-color: #f1c40f;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: #2c3e50;
+  animation: coinFloat 1s ease-out;
+  opacity: 0;
+}
+
+@keyframes coinFloat {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+}
