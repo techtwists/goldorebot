@@ -40,6 +40,7 @@ export default function Game() {
     userLevel: 1,
     xpToNextLevel: 100,
   });
+  const [errorLogs, setErrorLogs] = useState<string[]>([]); // State for error logs
 
   // Fetch user data from WebApp
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function Game() {
       }
     } catch (error) {
       console.error('Error fetching game state:', error);
+      setErrorLogs((prevLogs) => [...prevLogs, 'Error fetching game state: ' + error.message]); // Log error
     }
   };
 
@@ -70,6 +72,7 @@ export default function Game() {
       });
     } catch (error) {
       console.error('Error saving game state:', error);
+      setErrorLogs((prevLogs) => [...prevLogs, 'Error saving game state: ' + error.message]); // Log error
     }
   };
 
@@ -233,10 +236,15 @@ export default function Game() {
             </button>
           </div>
           <div id="auto-miner">Miners: {gameState.minerCount}</div>
+
+          {/* Error Log Section */}
+          <div id="error-log">
+            <h3>Error Logs:</h3>
+            <ul>
+              {errorLogs.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </div>
         </>
-      ) : (
-        <div>Loading...</div>
-      )}
-    </main>
-  );
-              }
+      ) :
